@@ -5,7 +5,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
-contract RandomNumber is VRFConsumerBaseV2, ConfirmedOwner {
+contract FortuneTeller is VRFConsumerBaseV2, ConfirmedOwner {
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
@@ -24,7 +24,8 @@ contract RandomNumber is VRFConsumerBaseV2, ConfirmedOwner {
     uint256 public lastRequestId;
 
     bytes32 keyHash =
-        0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
+        //0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
+        0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61;
 
     uint32 callbackGasLimit = 100000;
     uint16 requestConfirmations = 3;
@@ -33,15 +34,17 @@ contract RandomNumber is VRFConsumerBaseV2, ConfirmedOwner {
     /**
      * HARDCODED FOR GOERLI
      * COORDINATOR: 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D
+     * Avalanche Fuji testnet
+     * COORDINATOR: 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
      */
     constructor(
         uint64 subscriptionId
     )
-        VRFConsumerBaseV2(0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D)
+        VRFConsumerBaseV2(0x2eD832Ba664535e5886b75D64C46EB9a228C2610)
         ConfirmedOwner(msg.sender)
     {
         COORDINATOR = VRFCoordinatorV2Interface(
-            0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D
+            0x2eD832Ba664535e5886b75D64C46EB9a228C2610
         );
         s_subscriptionId = subscriptionId;
     }
