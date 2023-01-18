@@ -1,8 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
-const { deployFortuneTeller } = require("./Tasks/deployFortuneTeller");
-//const { deployFortuneSeeker } = require("./Tasks/deployFortuneSeeker");
+const { deployCharityRaffle } = require("./Tasks/deployCharityRaffle");
 
 const FUJI_RPC_URL =
   process.env.FUJI_RPC_URL || "https://api.avax-test.network/ext/bc/C/rpc";
@@ -13,18 +12,9 @@ const BLOCKEXPLORER_KEY =
   process.env.FUJI_SNOWTRACE_API_KEY || "Your etherscan API key";
 const REPORT_GAS = process.env.REPORT_GAS || false;
 
-// task("deploy-seeker", "deploys FortuneSeeker.sol")
-//   .addParam("fortuneteller", "Fortune Teller's Contract Address")
-//   .setAction(async (args, hre) => {
-//     await deployFortuneSeeker(args, hre).catch((error) => {
-//       console.error(error);
-//       process.exitCode = 1;
-//     });
-//   });
-
-task("deploy-teller", "deploys fortuneTeller.sol").setAction(
+task("deploy-teller", "deploys charityRaffle.sol").setAction(
   async (args, hre) => {
-    await deployFortuneTeller(args, hre).catch((error) => {
+    await deployCharityRaffle(args, hre).catch((error) => {
       console.error(error);
       process.exitCode = 1;
     });

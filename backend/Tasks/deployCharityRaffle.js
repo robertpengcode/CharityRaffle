@@ -1,7 +1,7 @@
 // const { ethers, network, run, userConfig } = require("hardhat") // TODO remove import
 const testnetConfigs = require("../testnets.config");
 
-async function deployFortuneTeller(_, hre) {
+async function deployCharityRaffle(_, hre) {
   const { ethers, network, run, userConfig } = hre;
 
   let VRFCoordinatorV2Mock;
@@ -53,23 +53,23 @@ async function deployFortuneTeller(_, hre) {
 
   console.log(`Deploying FortuneTeller to ${network.name}...`);
 
-  const FortuneTellerFactory = await ethers.getContractFactory("FortuneTeller");
-  const fortuneTellerContract = await FortuneTellerFactory.deploy(
+  const CharityRaffle = await ethers.getContractFactory("CharityRaffle");
+  const charityRaffle = await CharityRaffle.deploy(
     subscriptionId
     // vrfCoordinatorAddress
   );
 
   const waitBlockConfirmations = isLocalHostNetwork ? 1 : 3;
-  await fortuneTellerContract.deployTransaction.wait(waitBlockConfirmations);
+  await charityRaffle.deployTransaction.wait(waitBlockConfirmations);
 
   console.log(
-    `FortuneTeller deployed to ${fortuneTellerContract.address} on ${network.name}`
+    `CharityRaffle deployed to ${charityRaffle.address} on ${network.name}`
   );
 
   // If on a live testnet, verify the FortuneTeller Contract.
   if (!isLocalHostNetwork && userConfig.etherscan.apiKey) {
     await run("verify:verify", {
-      address: fortuneTellerContract.address,
+      address: charityRaffle.address,
       constructorArguments: [
         subscriptionId,
         // , vrfCoordinatorAddress
@@ -79,13 +79,10 @@ async function deployFortuneTeller(_, hre) {
 
   // Register the deployed Fortune Teller as a VRF Consumer on the Mock.
   if (isLocalHostNetwork) {
-    VRFCoordinatorV2Mock.addConsumer(
-      subscriptionId,
-      fortuneTellerContract.address
-    );
+    VRFCoordinatorV2Mock.addConsumer(subscriptionId, charityRaffle.address);
   }
 }
 
 module.exports = {
-  deployFortuneTeller,
+  deployCharityRaffle,
 };
