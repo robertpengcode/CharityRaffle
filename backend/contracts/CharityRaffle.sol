@@ -10,44 +10,49 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     enum RaffleStatus {
         OPEN,
         CALCULATING,
-        END
+        END,
+        PAID
     }
     struct Raffle {
-        address payable charityAddr;
+        address charityAddr;
         string description;
         uint256 endTime;
         RaffleStatus raffleStatus;
         address[] players;
-        address payable winner;
-        uint256 raffleBalance;
+        address winner;
+        uint256 balance;
     }
 
-    uint256 lastRaffleId;
-    mapping(uint256 => Raffle) raffles;
+    uint256 public immutable ticketPrice = 0.001 ether;
+    Raffle raffle;
+
+    //below for Chainlink VRF
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId;
-
     //key hash for gas lane
     bytes32 keyHash =
-        //0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
         //https://docs.chain.link/vrf/v2/subscription/supported-networks#avalanche-fuji-testnet
         0x354d2f95da55398f44b7cff77da56283d9c6c829a4bdf1bbcaf2ad6a4d081f61;
     uint32 callbackGasLimit = 100000;
     uint16 requestConfirmations = 3;
     uint32 numWords = 1;
-
-    uint256 lastTimeStamp;
-    uint256 public randomNum;
-
     /**
-     * HARDCODED FOR GOERLI
-     * COORDINATOR: 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D
      * Avalanche Fuji testnet
      * COORDINATOR: 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
      */
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
-    event RaffleCreated(uint256 raffleId, address charity, uint256 endTime);
-    event RaffleBought(address buyer, uint256 raffleId);
+    event RaffleCreated(address indexed charity, uint256 createTime, uint256 endTime);
+    event RaffleBought(address indexed buyer, uint256 timeStamp);
+    event RafflePaid(address indexed charity, uint256 toCharity, address indexed winner, uint256 toWinner, uint256 timeStamp);
+    event RaffleWithdrew(address indexed owner, uint256 timeStemp);
+
+    error Raffle_Expired();
+    error Raffle_NotEmpty();
+    error Raffle_NotOpen();
+    error Raffle_NotTicketPrice();
+    error Raffle_UpkeepNotNeeded(uint256 status, uint256 numOfPlayers, uint256 endTime);
+    error Raffle_NotEnded();
+    error Raffle_NotPaid();
 
     constructor(
         uint64 subscriptionId
@@ -61,34 +66,58 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
         s_subscriptionId = subscriptionId;
     }
 
-    function createRaffle(address payable charityAddr, string calldata description, uint256 endTime) external onlyOwner{
-        uint256 raffleId = lastRaffleId;
-        raffles[raffleId].charityAddr = charityAddr;
-        raffles[raffleId].description = description;
-        raffles[raffleId].endTime = endTime;
-        emit RaffleCreated(raffleId, charityAddr, endTime);
-        lastRaffleId++;
+    function createRaffle(address charityAddr, string calldata description, uint256 interval) external onlyOwner{
+        if (raffle.charityAddr != address(0)) {
+            revert Raffle_NotEmpty();
+        }
+        raffle.charityAddr = charityAddr;
+        raffle.description = description;
+        raffle.endTime = block.timestamp + interval;
+        emit RaffleCreated(charityAddr, block.timestamp, raffle.endTime);
     }
 
-    function buyRaffle(uint256 raffleId) external payable {
-        raffles[raffleId].players.push(msg.sender);
-        raffles[raffleId].raffleBalance += msg.value;
-        emit RaffleBought(msg.sender, raffleId);
+    function buyRaffle() external payable {
+        if (msg.value != ticketPrice) {
+            revert Raffle_NotTicketPrice();
+        }
+        if (block.timestamp > raffle.endTime) {
+            revert Raffle_Expired();
+        }
+        if (raffle.raffleStatus != RaffleStatus.OPEN) {
+            revert Raffle_NotOpen();
+        }
+        raffle.players.push(msg.sender);
+        raffle.balance += msg.value;
+        emit RaffleBought(msg.sender, block.timestamp);
     }
 
-    function pickWinner()
-        external
-        onlyOwner
-        returns (uint256 requestId)
+     function checkUpkeep(
+        bytes calldata /* checkData */
+    )
+        public
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory performData )
     {
-        requestId = COORDINATOR.requestRandomWords(
+        bool isOpen = raffle.raffleStatus == RaffleStatus.OPEN;
+        bool hasPlayers = raffle.players.length > 0;
+        bool timePassed = block.timestamp > raffle.endTime;
+        upkeepNeeded = isOpen && hasPlayers && timePassed;
+    }
+
+    function performUpkeep(bytes calldata performData) external override {
+        (bool UpkeepNeeded, ) = checkUpkeep(performData);
+        if(!UpkeepNeeded) {
+            revert Raffle_UpkeepNotNeeded(uint256(raffle.raffleStatus), raffle.players.length, raffle.endTime);
+        }
+        raffle.raffleStatus = RaffleStatus.CALCULATING;
+        COORDINATOR.requestRandomWords(
             keyHash,
             s_subscriptionId,
             requestConfirmations,
             callbackGasLimit,
             numWords
         );
-        return requestId;
     }
 
     function fulfillRandomWords(
@@ -96,49 +125,51 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
         uint256[] memory _randomWords
     ) internal override {
         emit RequestFulfilled(_requestId, _randomWords);
-        randomNum = _randomWords[0];
+        uint256 randomNum = _randomWords[0];
+        uint256 winnerIdex = randomNum % raffle.players.length;
+        raffle.winner = raffle.players[winnerIdex];
+        raffle.raffleStatus = RaffleStatus.END;
     }
 
-    function makePayments(uint256 raffleId, address charityAddr, address winner) public {
-        uint256 raffleBalance = raffles[raffleId].raffleBalance;
-        uint256 toCharity = (raffleBalance * 45) / 100;
-        uint256 toWinner = (raffleBalance * 45) / 100;
-        raffles[raffleId].raffleBalance -= toCharity;
-        raffles[raffleId].raffleBalance -= toWinner;
-        (bool sentCharity,) = payable(charityAddr).call{value: toCharity}("");
-        require(sentCharity, "sent to Charity failed");
-        (bool sentWinner,) = payable(winner).call{value: toWinner}("");
+    function makePayments() external {
+        if (raffle.raffleStatus != RaffleStatus.END) {
+            revert Raffle_NotEnded();
+        }
+        uint256 toCharity = (raffle.balance * 45) / 100;
+        uint256 toWinner = (raffle.balance * 45) / 100;
+        raffle.balance = 0;
+        (bool sentCharity,) = payable(raffle.charityAddr).call{value: toCharity}("");
+        require(sentCharity, "sent to charity failed");
+        (bool sentWinner,) = payable(raffle.winner).call{value: toWinner}("");
         require(sentWinner, "sent to winner failed");
+        raffle.raffleStatus = RaffleStatus.PAID;
+        emit RafflePaid(raffle.charityAddr, toCharity, raffle.winner, toWinner, block.timestamp);
     }
 
-    function checkUpkeep(
-        bytes calldata /* checkData */
-    )
-        external
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory /* performData */)
-    {
-        //upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
-        // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
+    function withdrawBalance() external onlyOwner{
+        if (raffle.raffleStatus != RaffleStatus.PAID) {
+            revert Raffle_NotPaid();
+        }
+        uint256 balance = address(this).balance;
+        (bool sentOwner, ) = payable(msg.sender).call{value: balance}("");
+        require(sentOwner, "sent balance failed");
+        delete raffle;
+        emit RaffleWithdrew(msg.sender, block.timestamp);
     }
 
-    function performUpkeep(bytes calldata /* performData */) external override {
-        //We highly recommend revalidating the upkeep in the performUpkeep function
-        // if ((block.timestamp - lastTimeStamp) > interval) {
-        //     lastTimeStamp = block.timestamp;
-        //     counter = counter + 1;
-        // }
-        // We don't use the performData in this example. The performData is generated by the Automation Node's call to your checkUpkeep function
+    function getCharity() external view returns(address, string memory) {
+        return (raffle.charityAddr, raffle.description);
+    }
+
+    function getWinner() external view returns(address) {
+        return raffle.winner;
+    }
+
+    function getRaffleInfo() external view returns(address, string memory, uint256, RaffleStatus, address[] memory, address, uint256) {
+        return(raffle.charityAddr, raffle.description, raffle.endTime, raffle.raffleStatus, raffle.players, raffle.winner, raffle.balance);
     }
 
     function getContractBalance() external view returns(uint256) {
         return address(this).balance;
-    }
-
-    function withdrawBalance() external onlyOwner{
-        uint256 balance = address(this).balance;
-        (bool sent, ) = payable(msg.sender).call{value: balance}("");
-        require(sent, "sent balance failed");
     }
 }
