@@ -12,7 +12,7 @@ const BLOCKEXPLORER_KEY =
   process.env.FUJI_SNOWTRACE_API_KEY || "Your etherscan API key";
 const REPORT_GAS = process.env.REPORT_GAS || false;
 
-task("deploy-teller", "deploys charityRaffle.sol").setAction(
+task("deploy-charityRaffle", "deploys charityRaffle.sol").setAction(
   async (args, hre) => {
     await deployCharityRaffle(args, hre).catch((error) => {
       console.error(error);

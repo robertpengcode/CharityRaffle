@@ -24,6 +24,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     }
 
     uint256 public immutable ticketPrice = 0.001 ether;
+    address admin;
     Raffle raffle;
 
     //below for Chainlink VRF
@@ -64,6 +65,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
             0x2eD832Ba664535e5886b75D64C46EB9a228C2610
         );
         s_subscriptionId = subscriptionId;
+        admin = msg.sender;
     }
 
     function createRaffle(address charityAddr, string calldata description, uint256 interval) external onlyOwner{
@@ -155,6 +157,10 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
         require(sentOwner, "sent balance failed");
         delete raffle;
         emit RaffleWithdrew(msg.sender, block.timestamp);
+    }
+
+    function getAdmin() external view returns(address) {
+        return admin;
     }
 
     function getCharity() external view returns(address, string memory) {

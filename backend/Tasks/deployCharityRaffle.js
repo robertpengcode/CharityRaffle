@@ -1,5 +1,6 @@
 // const { ethers, network, run, userConfig } = require("hardhat") // TODO remove import
 const testnetConfigs = require("../testnets.config");
+const fs = require("fs/promises");
 
 async function deployCharityRaffle(_, hre) {
   const { ethers, network, run, userConfig } = hre;
@@ -51,7 +52,7 @@ async function deployCharityRaffle(_, hre) {
     throw new Error("Missing configs for non localhost testnet");
   }
 
-  console.log(`Deploying FortuneTeller to ${network.name}...`);
+  console.log(`Deploying CharityRaffle to ${network.name}...`);
 
   const CharityRaffle = await ethers.getContractFactory("CharityRaffle");
   const charityRaffle = await CharityRaffle.deploy(
@@ -62,11 +63,25 @@ async function deployCharityRaffle(_, hre) {
   const waitBlockConfirmations = isLocalHostNetwork ? 1 : 3;
   await charityRaffle.deployTransaction.wait(waitBlockConfirmations);
 
+  await writeDeploymentInfo(charityRaffle, "charityRaffle.json");
+
+  async function writeDeploymentInfo(contract, filename) {
+    const data = {
+      contract: {
+        address: contract.address,
+        signerAddress: contract.signer.address,
+        abi: contract.interface.format(),
+      },
+    };
+    const content = JSON.stringify(data, null, 2);
+    await fs.writeFile(filename, content, { encoding: "utf-8" });
+  }
+
   console.log(
     `CharityRaffle deployed to ${charityRaffle.address} on ${network.name}`
   );
 
-  // If on a live testnet, verify the FortuneTeller Contract.
+  // If on a live testnet, verify the CharityRaffle Contract.
   if (!isLocalHostNetwork && userConfig.etherscan.apiKey) {
     await run("verify:verify", {
       address: charityRaffle.address,
