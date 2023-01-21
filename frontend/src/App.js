@@ -60,7 +60,7 @@ function App() {
         />
         <div className="container">
           <Routes>
-            <Route path="" element={<Home />} />
+            <Route path="" element={<Home contract={contract} />} />
             {isAdmin ? (
               <Route path="admin" element={<AdminMenu contract={contract} />} />
             ) : (

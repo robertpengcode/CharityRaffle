@@ -46,6 +46,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     event RaffleBought(address indexed buyer, uint256 timeStamp);
     event RafflePaid(address indexed charity, uint256 toCharity, address indexed winner, uint256 toWinner, uint256 timeStamp);
     event RaffleWithdrew(address indexed owner, uint256 timeStemp);
+    event RaffleDeleted(address indexed owner, uint256 timeStemp);
 
     error Raffle_Expired();
     error Raffle_NotEmpty();
@@ -54,6 +55,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     error Raffle_UpkeepNotNeeded(uint256 status, uint256 numOfPlayers, uint256 endTime);
     error Raffle_NotEnded();
     error Raffle_NotPaid();
+    error Raffle_CannotDelete();
 
     constructor(
         uint64 subscriptionId
@@ -157,6 +159,14 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
         require(sentOwner, "sent balance failed");
         delete raffle;
         emit RaffleWithdrew(msg.sender, block.timestamp);
+    }
+
+    function deleteRaffle() external onlyOwner{
+        if (raffle.players.length > 0) {
+            revert Raffle_CannotDelete();
+        }
+        delete raffle;
+        emit RaffleDeleted(msg.sender, block.timestamp);
     }
 
     function getAdmin() external view returns(address) {

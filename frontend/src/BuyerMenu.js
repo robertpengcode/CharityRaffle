@@ -1,26 +1,24 @@
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
+import { ethers } from "ethers";
 
 const BuyerMenu = ({ contract }) => {
-  // const [charityAddr, setCharityAddr] = useState("");
-  // const [description, setDescription] = useState("");
-  // const [intervalHrs, setIntervalHrs] = useState("");
-
   const buyRaffle = async () => {
     if (!contract) {
       alert("Please connect to MetaMask!");
       return;
     }
+    //const ticketPrice = ethers.utils.parseEther("0.001");
+    // const ticketPrice = (await contract.ticketPrice()).toNumber();
+    //console.log("t", ticketPrice);
     await contract
-      .createRaffle()
-      .then(() => alert("create raffle success!"))
+      .buyRaffle({ value: 100 })
+      .then(() => alert("buy raffle success!"))
       .catch((err) => {
+        console.log("e", err);
         alert(err.message);
       });
-    // setCharityAddr("");
-    // setDescription("");
-    // setIntervalHrs("");
   };
 
   const pay = async () => {
@@ -29,14 +27,11 @@ const BuyerMenu = ({ contract }) => {
       return;
     }
     await contract
-      .createRaffle()
-      .then(() => alert("create raffle success!"))
+      .makePayments()
+      .then(() => alert("pay charity & winner success!"))
       .catch((err) => {
         alert(err.message);
       });
-    // setCharityAddr("");
-    // setDescription("");
-    // setIntervalHrs("");
   };
 
   return (
@@ -50,50 +45,6 @@ const BuyerMenu = ({ contract }) => {
       <Button variant="outline-success" onClick={pay}>
         Pay Charity & Winner
       </Button>
-
-      {/* <Form>
-        <Form.Group className="mb-3">
-          <Form.Label>Charity Address</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter Charity Address"
-            value={charityAddr}
-            onChange={(e) => {
-              setCharityAddr(e.target.value);
-            }}
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter Description"
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-            }}
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Hours</Form.Label>
-          <Form.Control
-            type="number"
-            placeholder="Enter Hours"
-            value={intervalHrs}
-            onChange={(e) => {
-              setIntervalHrs(e.target.value);
-            }}
-            min="0"
-            max="24"
-          />
-        </Form.Group>
-
-        <Button variant="outline-success" onClick={createRaffle}>
-          Create Raffle
-        </Button>
-      </Form> */}
     </Container>
   );
 };

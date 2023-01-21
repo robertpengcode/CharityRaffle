@@ -40,6 +40,22 @@ const AdminMenu = ({ contract }) => {
     // setIntervalHrs("");
   };
 
+  const deleteRaffle = async () => {
+    if (!contract) {
+      alert("Please connect to MetaMask!");
+      return;
+    }
+    await contract
+      .deleteRaffle()
+      .then(() => alert("delete raffle success!"))
+      .catch((err) => {
+        alert(err.message);
+      });
+    // setCharityAddr("");
+    // setDescription("");
+    // setIntervalHrs("");
+  };
+
   return (
     <Container>
       <h1 className="display-6 d-flex justify-content-center">Admin's Menu</h1>
@@ -89,6 +105,10 @@ const AdminMenu = ({ contract }) => {
 
       <Button variant="outline-success" onClick={withdraw}>
         Owner Withdraw
+      </Button>
+
+      <Button variant="outline-success" onClick={deleteRaffle}>
+        Owner Delete
       </Button>
     </Container>
   );
