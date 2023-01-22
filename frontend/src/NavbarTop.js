@@ -3,7 +3,14 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import Button from "react-bootstrap/Button";
 
-const NavbarTop = ({ connectMetaMask, isConnected, isAdmin }) => {
+const NavbarTop = ({ connectMetaMask, isConnected, isAdmin, signerAddr }) => {
+  const convertAddress = (addr) => {
+    return addr.slice(0, 4) + "..." + addr.slice(addr.length - 4);
+  };
+  //console.log("ck", signerAddr);
+  const showSignerAddr = signerAddr ? convertAddress(signerAddr) : "";
+  //console.log("ck2", showSignerAddr);
+
   return (
     <Navbar bg="info" expand="sm" variant="dark">
       <Container>
@@ -16,7 +23,7 @@ const NavbarTop = ({ connectMetaMask, isConnected, isAdmin }) => {
           </Nav>
           <Nav>
             {isConnected ? (
-              <Navbar.Text>connected</Navbar.Text>
+              <Navbar.Text>{showSignerAddr} connected</Navbar.Text>
             ) : (
               <Button variant="outline-success" onClick={connectMetaMask}>
                 Connect

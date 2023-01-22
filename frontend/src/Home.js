@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import { ethers } from "ethers";
 
 const Home = ({ contract }) => {
   const [charityAddr, setCharityAddr] = useState("");
@@ -9,9 +10,7 @@ const Home = ({ contract }) => {
   const [raffleStatus, setRaffleStatus] = useState("");
   const [players, setPlayers] = useState([]);
   const [winner, setWinner] = useState("");
-  const [balance, setBalance] = useState("");
-
-  //console.log("ck", players);
+  const [balance, setBalance] = useState(0);
 
   const getRaffleInfo = async () => {
     if (!contract) {
@@ -21,7 +20,6 @@ const Home = ({ contract }) => {
     await contract
       .getRaffleInfo()
       .then((info) => {
-        //console.log(info);
         setInfo(info);
       })
       .catch((err) => {
@@ -60,26 +58,30 @@ const Home = ({ contract }) => {
       <h1 className="display-6 d-flex justify-content-center">
         Raffle Information
       </h1>
-      <Button variant="outline-success" onClick={getRaffleInfo}>
+      <Button
+        variant="outline-success"
+        className="mt-2"
+        onClick={getRaffleInfo}
+      >
         Get Info
       </Button>
       <Container>
-        <div>
+        <div className="mt-2">
           <div>Charity Address: {charityAddr}</div>
         </div>
-        <div>
+        <div className="mt-2">
           <div>Description: {description} </div>
         </div>
-        <div>
+        <div className="mt-2">
           <div>
             End Time:{" "}
             {endTime === 0 ? null : new Date(endTime * 1000).toLocaleString()}
           </div>
         </div>
-        <div>
+        <div className="mt-2">
           <div>Status: {convertStatus(raffleStatus)} </div>
         </div>
-        <div>
+        <div className="mt-2">
           <div>
             Players({players.length}){": "}
             {players.length === 0
@@ -87,17 +89,21 @@ const Home = ({ contract }) => {
               : players.map((player) => `${convertAddress(player)}, `)}
           </div>
         </div>
-        <div>
+        <div className="mt-2">
           <div>
             Winner:{" "}
             {winner.slice(0, 4) === "0x00" ? "None" : winner.slice(0, 4)}{" "}
           </div>
         </div>
-        <div>
-          <div>Balance: {balance} </div>
+        <div className="mt-2">
+          <div>
+            Balance (Ether):{" "}
+            {balance === 0 ? null : ethers.utils.formatEther(balance)}
+          </div>
         </div>
       </Container>
     </Container>
   );
 };
+// {ethers.utils.formatEther(balance)}
 export default Home;

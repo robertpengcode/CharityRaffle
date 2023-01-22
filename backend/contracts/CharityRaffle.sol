@@ -162,9 +162,9 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     }
 
     function deleteRaffle() external onlyOwner{
-        if (raffle.players.length > 0) {
-            revert Raffle_CannotDelete();
-        }
+        // if (raffle.players.length > 0) {
+        //     revert Raffle_CannotDelete();
+        // }
         delete raffle;
         emit RaffleDeleted(msg.sender, block.timestamp);
     }

@@ -10,7 +10,9 @@ import { useState, useEffect } from "react";
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [contract, setContract] = useState(null);
+  const [signerAddr, setSignerAddr] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [ticketPrice, setTicketPrice] = useState(0);
 
   useEffect(() => {
     window.ethereum.request({ method: "eth_accounts" }).then((accounts) => {
@@ -20,6 +22,9 @@ function App() {
           setContract(contract);
           if (contract) {
             checkAdmin(contract, signer);
+            const price = await contract.ticketPrice();
+            //console.log("here", price);
+            setTicketPrice(price);
           }
         });
       } else {
@@ -30,6 +35,7 @@ function App() {
 
   const checkAdmin = (contract, signer) => {
     signer.getAddress().then((address) => {
+      setSignerAddr(address);
       contract
         .getAdmin()
         .then((admin) => {
@@ -57,6 +63,7 @@ function App() {
           connectMetaMask={connectMetaMask}
           isConnected={isConnected}
           isAdmin={isAdmin}
+          signerAddr={signerAddr}
         />
         <div className="container">
           <Routes>
@@ -66,7 +73,12 @@ function App() {
             ) : (
               <Route path="admin" element={<></>} />
             )}
-            <Route path="buyer" element={<BuyerMenu contract={contract} />} />
+            <Route
+              path="buyer"
+              element={
+                <BuyerMenu contract={contract} ticketPrice={ticketPrice} />
+              }
+            />
           </Routes>
         </div>
       </Router>
