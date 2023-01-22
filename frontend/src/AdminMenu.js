@@ -30,14 +30,11 @@ const AdminMenu = ({ contract }) => {
       return;
     }
     await contract
-      .createRaffle()
-      .then(() => alert("create raffle success!"))
+      .withdrawBalance()
+      .then(() => alert("withdraw balance success!"))
       .catch((err) => {
         alert(err.message);
       });
-    // setCharityAddr("");
-    // setDescription("");
-    // setIntervalHrs("");
   };
 
   const deleteRaffle = async () => {
@@ -51,13 +48,10 @@ const AdminMenu = ({ contract }) => {
       .catch((err) => {
         alert(err.message);
       });
-    // setCharityAddr("");
-    // setDescription("");
-    // setIntervalHrs("");
   };
 
   return (
-    <Container>
+    <Container className="d-flex flex-column">
       <h1 className="display-6 d-flex justify-content-center">Admin's Menu</h1>
       <Form>
         <Form.Group className="mb-3">
@@ -98,16 +92,20 @@ const AdminMenu = ({ contract }) => {
           />
         </Form.Group>
 
-        <Button variant="outline-success" onClick={createRaffle}>
+        <Button
+          variant="outline-success"
+          className="mt-2"
+          onClick={createRaffle}
+        >
           Create Raffle
         </Button>
       </Form>
 
-      <Button variant="outline-success" onClick={withdraw}>
+      <Button variant="outline-success" className="mt-4" onClick={withdraw}>
         Owner Withdraw
       </Button>
 
-      <Button variant="outline-success" onClick={deleteRaffle}>
+      <Button variant="outline-success" className="mt-4" onClick={deleteRaffle}>
         Owner Delete
       </Button>
     </Container>

@@ -1,7 +1,6 @@
-import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
-import { ethers } from "ethers";
+//import { ethers } from "ethers";
 
 const BuyerMenu = ({ contract }) => {
   const buyRaffle = async () => {
@@ -35,14 +34,14 @@ const BuyerMenu = ({ contract }) => {
   };
 
   return (
-    <Container>
+    <Container className="d-flex flex-column align-items-center">
       <h1 className="display-6 d-flex justify-content-center">Buyer's Menu</h1>
 
-      <Button variant="outline-success" onClick={buyRaffle}>
+      <Button variant="outline-success" className="mt-4" onClick={buyRaffle}>
         Buy Raffle
       </Button>
 
-      <Button variant="outline-success" onClick={pay}>
+      <Button variant="outline-success" className="mt-4" onClick={pay}>
         Pay Charity & Winner
       </Button>
     </Container>
