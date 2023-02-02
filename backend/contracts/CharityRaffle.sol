@@ -37,6 +37,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     uint32 callbackGasLimit = 100000;
     uint16 requestConfirmations = 3;
     uint32 numWords = 1;
+    uint256 public lastRequestId;
     /**
      * Avalanche Fuji testnet
      * COORDINATOR: 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
@@ -56,15 +57,18 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     error Raffle_NotEnded();
     error Raffle_NotPaid();
     error Raffle_CannotDelete();
+    error Raffle_SentPlayerFailed();
 
+    //Fuji VRFCoordinator 0x2eD832Ba664535e5886b75D64C46EB9a228C2610
     constructor(
-        uint64 subscriptionId
+        uint64 subscriptionId,
+        address VRFCoordinator
     )
-        VRFConsumerBaseV2(0x2eD832Ba664535e5886b75D64C46EB9a228C2610)
+        VRFConsumerBaseV2(VRFCoordinator)
         ConfirmedOwner(msg.sender)
     {
         COORDINATOR = VRFCoordinatorV2Interface(
-            0x2eD832Ba664535e5886b75D64C46EB9a228C2610
+            VRFCoordinator
         );
         s_subscriptionId = subscriptionId;
         admin = msg.sender;
@@ -115,13 +119,37 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
             revert Raffle_UpkeepNotNeeded(uint256(raffle.raffleStatus), raffle.players.length, raffle.endTime);
         }
         raffle.raffleStatus = RaffleStatus.CALCULATING;
-        COORDINATOR.requestRandomWords(
+        requestRandomWords();
+        // COORDINATOR.requestRandomWords(
+        //     keyHash,
+        //     s_subscriptionId,
+        //     requestConfirmations,
+        //     callbackGasLimit,
+        //     numWords
+        // );
+    }
+
+    function requestRandomWords()
+        public
+        returns (uint256 requestId)
+    {
+        // Will revert if subscription is not set and funded.
+        requestId = COORDINATOR.requestRandomWords(
             keyHash,
             s_subscriptionId,
             requestConfirmations,
             callbackGasLimit,
             numWords
         );
+        // s_requests[requestId] = RequestStatus({
+        //     randomWords: new uint256[](0),
+        //     exists: true,
+        //     fulfilled: false
+        // });
+        // requestIds.push(requestId);
+        lastRequestId = requestId;
+        // emit RequestSent(requestId, numWords);
+        return requestId;
     }
 
     function fulfillRandomWords(
@@ -130,7 +158,7 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     ) internal override {
         emit RequestFulfilled(_requestId, _randomWords);
         uint256 randomNum = _randomWords[0];
-        uint256 winnerIdex = randomNum % raffle.players.length;
+        uint256 winnerIdex = randomNum % (raffle.players.length);
         raffle.winner = raffle.players[winnerIdex];
         raffle.raffleStatus = RaffleStatus.END;
     }
@@ -162,9 +190,18 @@ contract CharityRaffle is VRFConsumerBaseV2, ConfirmedOwner, AutomationCompatibl
     }
 
     function deleteRaffle() external onlyOwner{
-        // if (raffle.players.length > 0) {
-        //     revert Raffle_CannotDelete();
-        // }
+        uint256 numOfPlayers = raffle.players.length;
+        address[] memory players = raffle.players;
+        raffle.players = new address[](0);
+        if (numOfPlayers > 0) {
+            for (uint256 i = 0; i < numOfPlayers; i++) {
+                address player = players[i];
+                (bool sentPlayer,) = payable(player).call{value: ticketPrice}("");
+                if (!sentPlayer) {
+                    revert Raffle_SentPlayerFailed();
+                }
+            }
+        }
         delete raffle;
         emit RaffleDeleted(msg.sender, block.timestamp);
     }

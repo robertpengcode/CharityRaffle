@@ -4,7 +4,8 @@
   "description": "random number backend",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx hardhat test test/CharityRaffle.test.js",
+    "test2": "npx hardhat test test/CharityRaffle.staging.test.js"
   },
   "author": "Robert Peng",
   "license": "ISC",

@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
-const charityRaffleAddress = "0x131C7cf039725821771397C93B75E2e105DC72DC";
+const charityRaffleAddress = "0xF0A9A60ce781BeA8194b6293B29B25279C45faD3";
 const charityRaffleAbi = [
-  "constructor(uint64 subscriptionId)",
+  "constructor(uint64 subscriptionId, address VRFCoordinator)",
   "error OnlyCoordinatorCanFulfill(address have, address want)",
   "error Raffle_CannotDelete()",
   "error Raffle_Expired()",
@@ -12,6 +12,7 @@ const charityRaffleAbi = [
   "error Raffle_NotOpen()",
   "error Raffle_NotPaid()",
   "error Raffle_NotTicketPrice()",
+  "error Raffle_SentPlayerFailed()",
   "error Raffle_UpkeepNotNeeded(uint256 status, uint256 numOfPlayers, uint256 endTime)",
   "event OwnershipTransferRequested(address indexed from, address indexed to)",
   "event OwnershipTransferred(address indexed from, address indexed to)",
@@ -31,10 +32,12 @@ const charityRaffleAbi = [
   "function getContractBalance() view returns (uint256)",
   "function getRaffleInfo() view returns (address, string, uint256, uint8, address[], address, uint256)",
   "function getWinner() view returns (address)",
+  "function lastRequestId() view returns (uint256)",
   "function makePayments()",
   "function owner() view returns (address)",
   "function performUpkeep(bytes performData)",
   "function rawFulfillRandomWords(uint256 requestId, uint256[] randomWords)",
+  "function requestRandomWords() returns (uint256 requestId)",
   "function ticketPrice() view returns (uint256)",
   "function transferOwnership(address to)",
   "function withdrawBalance()",

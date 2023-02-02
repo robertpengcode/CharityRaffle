@@ -1,4 +1,3 @@
-// const { ethers, network, run, userConfig } = require("hardhat") // TODO remove import
 const testnetConfigs = require("../testnets.config");
 const fs = require("fs/promises");
 
@@ -56,8 +55,8 @@ async function deployCharityRaffle(_, hre) {
 
   const CharityRaffle = await ethers.getContractFactory("CharityRaffle");
   const charityRaffle = await CharityRaffle.deploy(
-    subscriptionId
-    // vrfCoordinatorAddress
+    subscriptionId,
+    vrfCoordinatorAddress
   );
 
   const waitBlockConfirmations = isLocalHostNetwork ? 1 : 3;
@@ -85,14 +84,11 @@ async function deployCharityRaffle(_, hre) {
   if (!isLocalHostNetwork && userConfig.etherscan.apiKey) {
     await run("verify:verify", {
       address: charityRaffle.address,
-      constructorArguments: [
-        subscriptionId,
-        // , vrfCoordinatorAddress
-      ],
+      constructorArguments: [subscriptionId, vrfCoordinatorAddress],
     });
   }
 
-  // Register the deployed Fortune Teller as a VRF Consumer on the Mock.
+  // Register the deployed CharityRaffle Contract as a VRF Consumer on the Mock.
   if (isLocalHostNetwork) {
     VRFCoordinatorV2Mock.addConsumer(subscriptionId, charityRaffle.address);
   }
