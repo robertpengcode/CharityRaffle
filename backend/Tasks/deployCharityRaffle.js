@@ -1,5 +1,9 @@
 const testnetConfigs = require("../testnets.config");
 const fs = require("fs/promises");
+//the below two file paths starts from hardhat.config.js
+const frontEndContractsFile =
+  "../nextjs_frontend/constants/contractAddresses.json";
+const frontEndAbiFile = "../nextjs_frontend/constants/abi.json";
 
 async function deployCharityRaffle(_, hre) {
   const { ethers, network, run, userConfig } = hre;
@@ -62,6 +66,7 @@ async function deployCharityRaffle(_, hre) {
   const waitBlockConfirmations = isLocalHostNetwork ? 1 : 3;
   await charityRaffle.deployTransaction.wait(waitBlockConfirmations);
 
+  //for react frontend
   await writeDeploymentInfo(charityRaffle, "charityRaffle.json");
 
   async function writeDeploymentInfo(contract, filename) {
@@ -74,6 +79,41 @@ async function deployCharityRaffle(_, hre) {
     };
     const content = JSON.stringify(data, null, 2);
     await fs.writeFile(filename, content, { encoding: "utf-8" });
+  }
+
+  //for next.js frontend
+  await updateContractAddresses();
+  await updateAbi();
+
+  async function updateContractAddresses() {
+    // const contractAddresses = JSON.parse(
+    //   fs.readFile(frontEndContractsFile, "utf8")
+    // );
+    const contractAddresses = fs.readFile(frontEndContractsFile, "utf8");
+
+    if (network.config.chainId.toString() in contractAddresses) {
+      if (
+        !contractAddresses[network.config.chainId.toString()].includes(
+          charityRaffle.address
+        )
+      ) {
+        contractAddresses[network.config.chainId.toString()].push(
+          charityRaffle.address
+        );
+      }
+    } else {
+      contractAddresses[network.config.chainId.toString()] = [
+        charityRaffle.address,
+      ];
+    }
+    fs.writeFile(frontEndContractsFile, JSON.stringify(contractAddresses));
+  }
+
+  async function updateAbi() {
+    await fs.writeFile(
+      frontEndAbiFile,
+      charityRaffle.interface.format(ethers.utils.FormatTypes.json)
+    );
   }
 
   console.log(
