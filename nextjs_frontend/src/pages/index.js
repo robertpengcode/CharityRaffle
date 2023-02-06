@@ -1,18 +1,15 @@
 import { contractAddresses, abi } from "../../constants";
 import { useMoralis, useWeb3Contract } from "react-moralis";
-import { useEffect, useState } from "react";
-import { useNotification } from "web3uikit";
+import { useState } from "react";
 import { ethers } from "ethers";
 
 const Home = () => {
   const { Moralis, isWeb3Enabled, chainId: chainIdHex } = useMoralis();
   const { runContractFunction } = useWeb3Contract();
   const chainId = parseInt(chainIdHex);
-  console.log(`ChainId is ${chainId}`);
+  //console.log(`ChainId is ${chainId}`);
   const charityRaffleAddress =
     chainId in contractAddresses ? contractAddresses[chainId][0] : null;
-
-  const dispatch = useNotification();
 
   const [charityAddr, setCharityAddr] = useState("");
   const [description, setDescription] = useState("");
@@ -22,19 +19,8 @@ const Home = () => {
   const [winner, setWinner] = useState("");
   const [balance, setBalance] = useState(0);
 
-  // const {
-  //   runContractFunction: getRaffleInfo,
-  //   isLoading,
-  //   isFetching,
-  // } = useWeb3Contract({
-  //   abi: abi,
-  //   contractAddress: charityRaffleAddress,
-  //   functionName: "getRaffleInfo",
-  //   params: {},
-  // });
-
   async function handleGetRaffleInfo() {
-    console.log("run get...");
+    //console.log("run get...");
     const getInfoObject = {
       abi: abi,
       contractAddress: charityRaffleAddress,
@@ -76,63 +62,13 @@ const Home = () => {
     return addr.slice(0, 4) + "..." + addr.slice(addr.length - 4);
   };
 
-  //   async function updateUIValues() {
-  //     const entranceFeeFromCall = (await getEntranceFee()).toString();
-  //     const numPlayersFromCall = (await getPlayersNumber()).toString();
-  //     const recentWinnerFromCall = await getRecentWinner();
-  //     setEntranceFee(entranceFeeFromCall);
-  //     setNumberOfPlayers(numPlayersFromCall);
-  //     setRecentWinner(recentWinnerFromCall);
-  //   }
-
-  // async function updateUIValues() {
-  //   //const raffleInfoFromCall = (await getRaffleInfo()).toString();
-  //   const raffleInfoFromCall = await getRaffleInfo();
-  //   console.log(raffleInfoFromCall);
-  // }
-
-  // useEffect(() => {
-  //   if (isWeb3Enabled) {
-  //     updateUIValues();
-  //   }
-  // }, [isWeb3Enabled]);
-
-  // const handleNewNotification = () => {
-  //   dispatch({
-  //     type: "info",
-  //     message: "Transaction Complete!",
-  //     title: "Transaction Notification",
-  //     position: "topR",
-  //     icon: "bell",
-  //   });
-  // };
-
-  // const handleSuccess = async (tx) => {
-  //   try {
-  //     await tx.wait(1);
-  //     //updateUIValues();
-  //     //resetLocalStates();
-  //     handleNewNotification(tx);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   return (
     <div>
       <h1 className="mt-4 ml-4 font-bold text-2xl text-sky-700">Raffle Info</h1>
       <button
-        type="button"
-        text="Get Info"
         className="bg-sky-700 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded ml-4 mt-4"
         onClick={handleGetRaffleInfo}
-        //disabled={isLoading || isFetching}
       >
-        {/* {isLoading || isFetching ? (
-          <div className="animate-spin spinner-border h-8 w-8 border-b-2 rounded-full"></div>
-        ) : (
-          "Get Info"
-        )} */}
         Get Info
       </button>
 
