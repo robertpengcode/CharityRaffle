@@ -39,3 +39,17 @@ Next.js Frontend:
 - react-moralis
 - web3uikit
 - tailwindcss
+
+## Next.js frontend
+
+Admin's Menu:
+
+![App](img/nextAdmin.png)
+
+Buyer's Menu:
+
+![App](img/nextBuyer.png)
+
+Home (Info):
+
+![App](img/nextHome.png)
